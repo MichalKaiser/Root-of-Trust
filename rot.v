@@ -572,13 +572,13 @@ always @(*) begin
 		end
 		ST_IDLE: begin
 			if (address ==  && data_i == OP_STATUS_CLEAR) begin
-				next_state = ;
+				next_state = ST_STATUS_CLEAR ;
 			end
 			else if (address ==  && data_i == OP_AES_RUN) begin
-				next_state = ;
+				next_state = ST_AES_RUN ;
 			end
 			else if (address ==  && data_i == OP_AES_CLEAR) begin
-				next_state = ;
+				next_state = ST_AES_CLEAR ;
 			end
 			else if (address ==  && data_i == OP_PUF_GEN) begin
 				next_state = ;
@@ -594,6 +594,24 @@ always @(*) begin
 			end
 		end
 		ST_STATUS_CLEAR: begin
+		
+		end
+		ST_AES_RUN: begin
+		
+		end
+		ST_AES_CLEAR: begin
+		
+		end
+		ST_PUF_GEN: begin
+		
+		end 
+		ST_PUF_CLEAR: begin
+		
+		end
+		ST_TRNG_GEN: begin
+		
+		end
+		ST_TRNG_CLEAR: begin
 		
 		end
 	endcase
