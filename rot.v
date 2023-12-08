@@ -11,6 +11,12 @@ module rot #(
 );
 
 `include "opcodes.vh"
+/*
+AES
+*********************************************************************
+*/
+localparam ld = 1'b1;
+reg done;
 
 /*
 SPECIAL REGISTERS - for status and operations
@@ -108,7 +114,7 @@ always @(*) begin
 		ST_START: begin
 			status_register_mem <= 32'b0;
 			if(address == 32'h1000_0081 && data_i==OP_FSM && status_register_mem[0] != 1) begin
-				next_state <= ST_FSM0;
+				next_state = ST_FSM0;
 			end
 			if else(address == 32'h1000_0081 && data_i!=OP_FSM) begin
 				next_state = ST_START;
@@ -121,20 +127,20 @@ always @(*) begin
 			if(address == 32'h1000_0081 && data_i[31]==FSM[31]) begin
 				FSM_correct = 1;
 				status_register_mem = 32'b11;
-				next_state <= ST_FSM1;
+				next_state = ST_FSM1;
 			end
 			else if(address == 32'h1000_0081 && data_i[31] != FSM[31])begin
 				FSM_correct = 0;
 				next_state = ST_FSM1;
 			end
 			else if(address != 32'h1000_0081) begin
-				next_state = ST_START; //?????????, should be like this?
+				next_state = ST_START; //?????????, should be like this? - it is not needed. Address can be basicly checked at the begining and at the end of the operation. also dont forget to make rot busy.
 			end
 		end
 		ST_FSM1: begin
 			if(address == 32'h1000_0081 && data_i[30]==FSM[30]) begin
 				status_register_mem = 32'b11;
-				next_state <= ST_FSM2;
+				next_state = ST_FSM2;
 			end
 			else if(address == 32'h1000_0081 && data_i[30] != FSM[30])begin
 				FSM_correct = 0;
@@ -147,7 +153,7 @@ always @(*) begin
 		ST_FSM2: begin
 			if(address == 32'h1000_0081 && data_i[29]==FSM[29]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM3;
+					next_state = ST_FSM3;
 			end
 			else if(address == 32'h1000_0081 && data_i[29]!=FSM[29]) begin
 					FSM_correct = 0;
@@ -161,7 +167,7 @@ always @(*) begin
 		ST_FSM3: begin
 			if(address == 32'h1000_0081 && data_i[28]==FSM[28]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM4;
+					next_state = ST_FSM4;
 			end
 			else if(address == 32'h1000_0081 && data_i[28]!=FSM[28]) begin
 					FSM_correct = 0;
@@ -175,7 +181,7 @@ always @(*) begin
 		ST_FSM4: begin
 			if(address == 32'h1000_0081 && data_i[27]==FSM[27]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM5;
+					next_state = ST_FSM5;
 			end
 			else if(address == 32'h1000_0081 && data_i[27]!=FSM[27]) begin
 					FSM_correct = 0;
@@ -189,7 +195,7 @@ always @(*) begin
 		ST_FSM5: begin
 			if(address == 32'h1000_0081 && data_i[26]==FSM[26]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM6;
+					next_state = ST_FSM6;
 			end
 			else if(address == 32'h1000_0081 && data_i[26]!=FSM[26]) begin
 					FSM_correct = 0;
@@ -203,7 +209,7 @@ always @(*) begin
 		ST_FSM6: begin
 			if(address == 32'h1000_0081 && data_i[25]==FSM[25]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM7;
+					next_state = ST_FSM7;
 			end
 			else if(address == 32'h1000_0081 && data_i[25]!=FSM[25]) begin
 					FSM_correct = 0;
@@ -217,7 +223,7 @@ always @(*) begin
 		ST_FSM7: begin
 			if(address == 32'h1000_0081 && data_i[24]==FSM[24]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM8;
+					next_state = ST_FSM8;
 			end
 			else if(address == 32'h1000_0081 && data_i[24]!=FSM[24]) begin
 					FSM_correct = 0;
@@ -231,7 +237,7 @@ always @(*) begin
 		ST_FSM8: begin
 			if(address == 32'h1000_0081 && data_i[23]==FSM[23]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM9;
+					next_state = ST_FSM9;
 			end
 			else if(address == 32'h1000_0081 && data_i[23]!=FSM[23]) begin
 					FSM_correct = 0;
@@ -245,7 +251,7 @@ always @(*) begin
 		ST_FSM9: begin
 			if(address == 32'h1000_0081 && data_i[22]==FSM[22]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM10;
+					next_state = ST_FSM10;
 			end
 			else if(address == 32'h1000_0081 && data_i[22]!=FSM[22]) begin
 					FSM_correct = 0;
@@ -259,7 +265,7 @@ always @(*) begin
 		ST_FSM10: begin
 			if(address == 32'h1000_0081 && data_i[21]==FSM[21]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM11;
+					next_state = ST_FSM11;
 			end
 			else if(address == 32'h1000_0081 && data_i[21]!=FSM[21]) begin
 					FSM_correct = 0;
@@ -273,7 +279,7 @@ always @(*) begin
 		ST_FSM11: begin
 			if(address == 32'h1000_0081 && data_i[20]==FSM[20]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM12;
+					next_state = ST_FSM12;
 			end
 			else if(address == 32'h1000_0081 && data_i[20]!=FSM[20]) begin
 					FSM_correct = 0;
@@ -287,7 +293,7 @@ always @(*) begin
 		ST_FSM12: begin
 			if(address == 32'h1000_0081 && data_i[19]==FSM[19]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM13;
+					next_state = ST_FSM13;
 			end
 			else if(address == 32'h1000_0081 && data_i[19]!=FSM[19]) begin
 					FSM_correct = 0;
@@ -301,7 +307,7 @@ always @(*) begin
 		ST_FSM13: begin
 			if(address == 32'h1000_0081 && data_i[18]==FSM[18]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM14;
+					next_state = ST_FSM14;
 			end
 			else if(address == 32'h1000_0081 && data_i[18]!=FSM[18]) begin
 					FSM_correct = 0;
@@ -315,7 +321,7 @@ always @(*) begin
 		ST_FSM14: begin
 			if(address == 32'h1000_0081 && data_i[17]==FSM[17]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM15;
+					next_state = ST_FSM15;
 			end
 			else if(address == 32'h1000_0081 && data_i[17]!=FSM[17]) begin
 					FSM_correct = 0;
@@ -329,7 +335,7 @@ always @(*) begin
 		ST_FSM15: begin
 			if(address == 32'h1000_0081 && data_i[16]==FSM[16]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM16;
+					next_state = ST_FSM16;
 			end
 			else if(address == 32'h1000_0081 && data_i[16]!=FSM[16]) begin
 					FSM_correct = 0;
@@ -343,7 +349,7 @@ always @(*) begin
 		ST_FSM16: begin
 			if(address == 32'h1000_0081 && data_i[15]==FSM[15]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM17;
+					next_state = ST_FSM17;
 			end
 			else if(address == 32'h1000_0081 && data_i[15]!=FSM[15]) begin
 					FSM_correct = 0;
@@ -357,7 +363,7 @@ always @(*) begin
 		ST_FSM17: begin
 			if(address == 32'h1000_0081 && data_i[14]==FSM[14]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM18;
+					next_state = ST_FSM18;
 			end
 			else if(address == 32'h1000_0081 && data_i[14]!=FSM[14]) begin
 					FSM_correct = 0;
@@ -371,7 +377,7 @@ always @(*) begin
 		ST_FSM18: begin
 			if(address == 32'h1000_0081 && data_i[13]==FSM[13]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM19;
+					next_state = ST_FSM19;
 			end
 			else if(address == 32'h1000_0081 && data_i[13]!=FSM[13]) begin
 					FSM_correct = 0;
@@ -385,7 +391,7 @@ always @(*) begin
 		ST_FSM19: begin
 			if(address == 32'h1000_0081 && data_i[12]==FSM[12]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM20;
+					next_state = ST_FSM20;
 			end
 			else if(address == 32'h1000_0081 && data_i[12]!=FSM[12]) begin
 					FSM_correct = 0;
@@ -399,7 +405,7 @@ always @(*) begin
 		ST_FSM20: begin
 			if(address == 32'h1000_0081 && data_i[11]==FSM[11]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM21;
+					next_state = ST_FSM21;
 			end
 			else if(address == 32'h1000_0081 && data_i[11]!=FSM[11]) begin
 					FSM_correct = 0;
@@ -413,7 +419,7 @@ always @(*) begin
 		ST_FSM21: begin
 			if(address == 32'h1000_0081 && data_i[10]==FSM[10]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM22;
+					next_state = ST_FSM22;
 			end
 			else if(address == 32'h1000_0081 && data_i[10]!=FSM[10]) begin
 					FSM_correct = 0;
@@ -427,7 +433,7 @@ always @(*) begin
 		ST_FSM22: begin
 			if(address == 32'h1000_0081 && data_i[9]==FSM[9]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM23;
+					next_state = ST_FSM23;
 			end
 			else if(address == 32'h1000_0081 && data_i[9]!=FSM[9]) begin
 					FSM_correct = 0;
@@ -441,7 +447,7 @@ always @(*) begin
 		ST_FSM23: begin
 			if(address == 32'h1000_0081 && data_i[8]==FSM[8]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM24;
+					next_state = ST_FSM24;
 			end
 			else if(address == 32'h1000_0081 && data_i[8]!=FSM[8]) begin
 					FSM_correct = 0;
@@ -455,7 +461,7 @@ always @(*) begin
 		ST_FSM24: begin
 			if(address == 32'h1000_0081 && data_i[7]==FSM[7]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM25;
+					next_state = ST_FSM25;
 			end
 			else if(address == 32'h1000_0081 && data_i[7]!=FSM[7]) begin
 					FSM_correct = 0;
@@ -469,7 +475,7 @@ always @(*) begin
 		ST_FSM25: begin
 			if(address == 32'h1000_0081 && data_i[6]==FSM[6]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM26;
+					next_state = ST_FSM26;
 			end
 			else if(address == 32'h1000_0081 && data_i[6]!=FSM[6]) begin
 					FSM_correct = 0;
@@ -483,7 +489,7 @@ always @(*) begin
 		ST_FSM26: begin
 			if(address == 32'h1000_0081 && data_i[5]==FSM[5]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM27;
+					next_state = ST_FSM27;
 			end
 			else if(address == 32'h1000_0081 && data_i[5]!=FSM[5]) begin
 					FSM_correct = 0;
@@ -497,7 +503,7 @@ always @(*) begin
 		ST_FSM27: begin
 			if(address == 32'h1000_0081 && data_i[4]==FSM[4]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM28;
+					next_state = ST_FSM28;
 			end
 			else if(address == 32'h1000_0081 && data_i[4]!=FSM[4]) begin
 					FSM_correct = 0;
@@ -511,7 +517,7 @@ always @(*) begin
 		ST_FSM28: begin
 			if(address == 32'h1000_0081 && data_i[3]==FSM[3]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM29;
+					next_state = ST_FSM29;
 			end
 			else if(address == 32'h1000_0081 && data_i[3]!=FSM[3]) begin
 					FSM_correct = 0;
@@ -525,7 +531,7 @@ always @(*) begin
 		ST_FSM29: begin
 			if(address == 32'h1000_0081 && data_i[2]==FSM[2]) begin
 					status_register_mem = 32'b11;
-					next_state <= ST_FSM30;
+					next_state = ST_FSM30;
 			end
 			else if(address == 32'h1000_0081 && data_i[2]!=FSM[2]) begin
 					FSM_correct = 0;
@@ -554,11 +560,11 @@ always @(*) begin
 			if(address == 32'h1000_0081 && data_i[0]==FSM[0]) begin
 				if (FSM_correct == 0) begin
 					status_register_mem = 32'b0000;
-					next_state <= ST_START;
+					next_state = ST_START;
 				end
 				else begin
 					status_register_mem = 32'b0000;
-					next_state <= ST_IDLE;
+					next_state = ST_IDLE;
 				end
 			end
 			else if(address == 32'h1000_0081 && data_i[0]!=FSM[0]) begin
@@ -571,39 +577,54 @@ always @(*) begin
 			end
 		end
 		ST_IDLE: begin
-			if (address ==  && data_i == OP_STATUS_CLEAR) begin
-				next_state = ST_STATUS_CLEAR ;
+			status_register_mem[4:0] = 5'b0000;
+			if (address == 32'h1000_0081 && data_i == OP_STATUS_CLEAR) begin
+				next_state = ST_STATUS_CLEAR;
 			end
-			else if (address ==  && data_i == OP_AES_RUN) begin
-				next_state = ST_AES_RUN ;
+			else if (address == 32'h1000_0081  && data_i == OP_AES_RUN) begin
+				next_state = ST_AES_RUN;
 			end
-			else if (address ==  && data_i == OP_AES_CLEAR) begin
-				next_state = ST_AES_CLEAR ;
+			else if (address == 32'h1000_0081  && data_i == OP_AES_CLEAR) begin
+				next_state = ST_AES_CLEAR;
 			end
-			else if (address ==  && data_i == OP_PUF_GEN) begin
+			else if (address == 32'h1000_0081  && data_i == OP_PUF_GEN) begin
 				next_state = ;
 			end
-			else if (address ==  && data_i == OP_PUF_CLEAR) begin
+			else if (address == 32'h1000_0081 && data_i == OP_PUF_CLEAR) begin
 				next_state = ;
 			end
-			else if (address ==  && data_i == OP_TRNG_GEN ) begin
+			else if (address == 32'h1000_0081 && data_i == OP_TRNG_GEN ) begin
 				next_state = ;
 			end
-			else if (address ==  && data_i == OP_TRNG_CLEAR) begin
+			else if (address == 32'h1000_0081 && data_i == OP_TRNG_CLEAR) begin
 				next_state = ;
 			end
 		end
 		ST_STATUS_CLEAR: begin
-		
+			status_register_mem[25:0] = 26'b0;
+			next_state = ST_IDLE;
 		end
 		ST_AES_RUN: begin
-		
+			status_register_mem[4:0] = 4'b10001;
+			aes_cipher_top aes_cipher_top(.clk (clk),
+			.rst_n(rst_n),
+			.ld(ld),
+			.done(done),
+			.key(AES_key),
+			.text_in(AES_plaintext),
+			.text_out(AES_ciphertext)
+			);
+			next_state = ST_IDLE;
 		end
 		ST_AES_CLEAR: begin
-		
+			AES_key = 32'b0;
+			status_register_mem[5] = 1'b0;
+			next_state = ST_IDLE;
 		end
 		ST_PUF_GEN: begin
-		
+			if(status_register_mem[30] == 0) begin
+
+			end
 		end 
 		ST_PUF_CLEAR: begin
 		
@@ -613,6 +634,9 @@ always @(*) begin
 		end
 		ST_TRNG_CLEAR: begin
 		
+		end
+		ST_OSC: begin
+
 		end
 	endcase
 endmodule
