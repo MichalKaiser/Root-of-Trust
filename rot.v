@@ -807,6 +807,18 @@ always @(*) begin
 		ST_FSM: begin
 		end
 		ST_STATUS: begin
+			if (address == status_register_address) begin
+				if (re == 1) begin
+					assign data_o = status_register;
+					next_state = ST_IDLE;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+					next_state = ST_IDLE;
+			end
 		end
 		ST_OPERATIONS: begin
 		end
