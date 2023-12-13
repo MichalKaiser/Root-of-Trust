@@ -7,10 +7,10 @@ module puf_gen_1(enable, control_input, output_signal);
     wire mux1_out, mux2_out;
     reg [15:0] counter1, counter2;
 
-    osc_ring_3 osc3(enable, osc3_out);
-    osc_ring_5 osc5(enable, osc5_out);
-    osc_ring_7 osc7(enable, osc7_out);
-    osc_ring_9 osc9(enable, osc9_out);
+    osc_ring_3 osc3(.enable(enable), .output_signal(osc3_out));
+    osc_ring_5 osc5(.enable(enable), .output_signal(osc5_out));
+    osc_ring_7 osc7(.enable(enable), .output_signal(osc7_out));
+    osc_ring_9 osc9(.enable(enable), .output_signal(osc9_out));
 
     assign mux1_out = (control_input == 2'b00) ? osc3_out :
                       (control_input == 2'b01) ? osc5_out :

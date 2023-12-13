@@ -21,15 +21,26 @@ FLAGS
 */
 
 reg OBFC_correct; // 1 if Obfuscation is correct.
-reg [7:0] state, next_state; //states of FSM
+reg [7:0] state, next_state, prev_state; //states of FSM
 
 /*
 AES
 *******************************************************************************************************************************************
 */
 
-localparam ld = 1'b1;
-reg done;
+wire ld;
+wire done;
+wire AES_output;
+
+
+/*
+PUF
+*******************************************************************************************************************************************
+*/
+
+wire enable;
+wire [1:0] control_input;
+wire output_signal;
 
 /*
 *******************************************************************************************************************************************
@@ -362,7 +373,8 @@ always @(*) begin
 			end
 		end
 		ST_IDLE: begin
-			status_register_mem[4:0] = 5'b0000;
+			operation_register = OP_NOP;
+			status_register[4:0] = 5'b0000;
 			if (address == operation_register_address) begin
 				if (data_i == OP_NOP) begin
 					next_state = ST_IDLE;
@@ -388,66 +400,416 @@ always @(*) begin
 				else if (data_i == OP_TRNG_GEN) begin
 					next_state = ST_TRNG_GEN;
 				end
-				if (data_i == OP_TRNG_CLEAR) begin
+				else if (data_i == OP_TRNG_CLEAR) begin
 					next_state = ST_TRNG_CLEAR
+				end
+				else begin
+					next_state = ST_IDLE;
 				end
 			end
 			else if (address == AES_key_address1) begin
-				
+				next_state = ST_AES_KEY1;
 			end
 			else if (address == AES_plaintext_address1) begin
-
+				next_state = ST_AES_PLAINTEXT;
 			end
-			else if (address = AES_ciphertext_address1) begin
-			
+			else if (address == AES_ciphertext_address1) begin
+				next_state = ST_AES_CIPHERTEXT1;
 			end
-			else if (address = PUF_signature_address1) begin
-			
+			else if (address == PUF_signature_address1) begin
+				next_state = ST_PUF_SIGNATURE;
 			end
-			else if (address = enc_PUF_signature_address1) begin
-			
+			else if (address == enc_PUF_signature_address1) begin
+				next_state = ST_PUF_ENC;
 			end
-			else if (address = TRNG_address1) begin
-			
+			else if (address == TRNG_address1) begin
+				next_state = ST_TRNG;
+			end
+			else if (address == FSM_address) begin
+				next_state = ST_FSM;
+			end
+			else if (address == status_register_address) begin
+				
+			end
+			else if (address == operation_register_address) begin
+				
 			end
 		end
 		ST_STATUS_CLEAR: begin
-			status_register_mem[25:0] = 26'b0;
+			operation_register = OP_STATUS_CLEAR;
+			status_register[25:0] = 26'b0; //clean all registers from 25 to 0
 			next_state = ST_IDLE;
 		end
 		ST_AES_RUN: begin
-			status_register_mem[4:0] = 4'b10001;
-			aes_cipher_top aes_cipher_top(.clk (clk),
-			.rst_n(rst_n),
-			.ld(ld),
-			.done(done),
-			.key(AES_key),
-			.text_in(AES_plaintext),
-			.text_out(AES_ciphertext)
-			);
-			next_state = ST_IDLE;
-		end
-		ST_AES_CLEAR: begin
-			AES_key = 32'b0;
-			status_register_mem[5] = 1'b0;
-			next_state = ST_IDLE;
-		end
-		ST_PUF_GEN: begin
-			if(status_register_mem[30] == 0) begin
+			if(status_register[0] == 1 && status_register[3] == 1) begin
+				status_register[4] = 1'b1; //run AES
+				if (prev_state == ST_PUF_ENC0) begin
+					ld = 1;
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[127:0]),
+						.text_out(enc_PUF_signature[127:0])
+					);
+					next_state ST_PUF_ENC1;
+				end
+				else if (prev_state == ST_PUF_ENC1) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[255:128]),
+						.text_out(enc_PUF_signature[255:128])
+					);
+					next_state ST_PUF_ENC2;
+				end
+				else if (prev_state == ST_PUF_ENC2) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[383:256]),
+						.text_out(enc_PUF_signature[383:256])
+					);
+					next_state ST_PUF_ENC3;
+				end
+				else if (prev_state == ST_PUF_ENC3) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[511:384]),
+						.text_out(enc_PUF_signature[511:384])
+					);
+					next_state ST_PUF_ENC4;
+				end
+				else if (prev_state == ST_PUF_ENC4) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[639:512]),
+						.text_out(enc_PUF_signature[639:512])
+					);
+					next_state ST_PUF_ENC5;
+				end
+				else if (prev_state == ST_PUF_ENC5) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[767:640]),
+						.text_out(enc_PUF_signature[767:640])
+					);
+					next_state ST_PUF_ENC6;
+				end
+				else if (prev_state == ST_PUF_ENC6) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[895:768]),
+						.text_out(enc_PUF_signature[895:768])
+					);
+					next_state ST_PUF_ENC6;					
+				end
+				else if (prev_state == ST_PUF_ENC7) begin
+					aes_cipher_top aes_cipher_top(
+						.clk (clk),
+						.rst_n(rst_n),
+						.ld(ld),
+						.done(done),
+						.key(AES_key),
+						.text_in(PUF_signature[1023:896]),
+						.text_out(enc_PUF_signature[1023:896])
+					);
+					next_state ST_PUF_GEN;	
+				end
 
 			end
+			else begin
+				operation_register = OP_AES_RUN;
+				status_register[4] = 1'b1; //run AES
+				status_register[0] = 1'b1; //run ROOT
+				ld = 1;
+				aes_cipher_top aes_cipher_top(.clk (clk),
+				.rst_n(rst_n),
+				.ld(ld),
+				.done(done),
+				.key(AES_key),
+				.text_in(AES_plaintext),
+				.text_out(AES_output)
+				);
+				AES_ciphertext = AES_output;
+				status_register[31] = 1;
+				next_state = ST_IDLE;
+			end
+
+		end
+		ST_AES_CLEAR: begin
+			if (status_register[5] == 1'b1) begin
+				AES_key = 32'b0;
+				status_register[5] = 1'b0;
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+		end
+		ST_PUF_GEN: begin
+			if(prev_state == ST_PUF_ENC7) begin
+				status_register[30] = 1'b1;
+				next_state = ST_IDLE;
+			end
+			else begin	
+				operation_register = OP_PUF_GEN;
+				status_register[0] = 1'b1;
+				status_register[3] = 1'b1;
+				if(status_register[30] == 0) begin //if PUF is not dirty
+					enable = 1;
+					control_input = 2'b01;
+					puf_gen_1024 puf_gen(
+						.enable(enable),
+						.control_input(control_input),
+						.output_signal(output_signal)
+					);
+					PUF_signature = output_signal;
+					next_state = ST_PUF_ENC0;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
 		end 
+		ST_PUF_ENC0: begin
+			prev_state = ST_PUF_ENC0;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC1: begin
+			prev_state = ST_PUF_ENC1;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC2: begin
+			prev_state = ST_PUF_ENC2;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC3: begin
+			prev_state = ST_PUF_ENC3;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC4: begin
+			prev_state = ST_PUF_ENC4;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC5: begin
+			prev_state = ST_PUF_ENC5;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC6: begin
+			prev_state = ST_PUF_ENC6;
+			next_state = ST_AES_RUN;
+		end
+		ST_PUF_ENC7: begin
+			prev_state = ST_PUF_ENC7;
+			next_state = ST_AES_RUN;
+		end
 		ST_PUF_CLEAR: begin
-		
+			if(status_register[30] == 1) begin //PUF dirty
+				PUF_signature = 1024'b0;
+				status_register[30] = 1'b0;
+			end
+			next_state = ST_IDLE;
 		end
 		ST_TRNG_GEN: begin
+			status_register[2] = 1;
+			if(status_register[28:26] < 6) begin
+				rng_gen_128 random_number_gen(
+					.enable(enable),
+					.clk(clk), 
+					.output_signal(output_signal)
+				);
+				TRNG = output_signal;
+				status_register[28:26] = status_register[28:26] + 1;
+				status_register[29] = 1'b1;
+			end
+			next_state = ST_IDLE;
 		
 		end
 		ST_TRNG_CLEAR: begin
-		
+			TRNG = 128'b0;
+			next_state = ST_IDLE;
 		end
-		ST_OSC: begin
+		ST_AES_KEY1: begin
+			if (address == AES_key_address1) begin
+				if (we == 1) begin
+					AES_key[31:0] = data_i;
+					prev_state = ST_AES_KEY1;
+					next_state = ST_AES_KEY2;
+				end
+				else if (re == 1) begin
+					assign data_o = AES_key[31:0];
+					prev_state = ST_AES_KEY1;
+					next_state	= ST_AES_KEY2;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_KEY2: begin
+			if (address == AES_key_address2) begin
+				if (we == 1) begin
+					AES_key[63:32] = data_i;
+					prev_state = ST_AES_KEY2;
+					next_state = ST_AES_KEY3;
+				end
+				else if (re == 1) begin
+					assign data_o = AES_key[63:32];
+					prev_state = ST_AES_KEY2;
+					next_state	= ST_AES_KEY3;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_KEY3: begin
+			if (address == AES_key_address3) begin
+				if (we == 1) begin
+					AES_key[95:64] = data_i;
+					prev_state = ST_AES_KEY3;
+					next_state = ST_AES_KEY4;
+				end
+				else if (re == 1) begin
+					assign data_o = AES_key[95:64];
+					prev_state = ST_AES_KEY3;
+					next_state	= ST_AES_KEY4;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_KEY4: begin
+			if (address == AES_key_address4) begin
+				if (we == 1) begin
+					AES_key[127:96] = data_i;
+					prev_state = ST_AES_KEY4;
+					next_state = ST_IDLE;
+				end
+				else if (re == 1) begin
+					assign data_o = AES_key[127:96];
+					prev_state = ST_AES_KEY4;
+					next_state	= ST_AES_IDLE;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_PLAINTEXT: begin
+			next_state = ST_IDLE;
+		end
+		ST_AES_CIPHERTEXT1: begin
+			if (address == AES_ciphertext_address1) begin
+				if (re == 1) begin
+					assign data_o = AES_ciphertext[31:0];
+					prev_state = ST_AES_CIPHERTEXT1;
+					next_state	= ST_AES_CIPHERTEXT2;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_CIPHERTEXT2: begin
+			if (address == AES_ciphertext_address2) begin
+				if (re == 1) begin
+					assign data_o = AES_ciphertext[63:32];
+					prev_state = ST_AES_CIPHERTEXT2;
+					next_state	= ST_AES_CIPHERTEXT3;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_CIPHERTEXT3: begin
+			if (address == AES_ciphertext_address3) begin
+				if (re == 1) begin
+					assign data_o = AES_ciphertext[95:64];
+					prev_state = ST_AES_CIPHERTEXT3;
+					next_state	= ST_AES_CIPHERTEXT4;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_AES_CIPHERTEXT4: begin
+			if (address == AES_ciphertext_address4) begin
+				if (re == 1) begin
+					assign data_o = AES_ciphertext[127:96];
+					prev_state = ST_AES_CIPHERTEXT4;
+					next_state	= ST_IDLE;
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			else begin
+				next_state = ST_IDLE
+			end
+		end
+		ST_PUF_SIGNATURE: begin
+			next_state = ST_IDLE;
+		end
+		ST_PUF_ENC: begin
+		end
+		ST_TRNG: begin
+		end
+		ST_FSM: begin
+		end
+		ST_STATUS: begin
+		end
+		ST_OPERATIONS: begin
+		end
 
-		end
 	endcase
 endmodule

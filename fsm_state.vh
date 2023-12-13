@@ -10,10 +10,30 @@ localparam ST_FSM = 7'b0000010;
 localparam ST_STATUS_CLEAR = 7'b0000011;
 localparam ST_AES_RUN = 7'b0000100;
 localparam ST_AES_CLEAR = 7'b0000101;
-localparam ST_PUF_GEN = 7'b0000110;
-localparam ST_PUF_CLEAR = 7'b0000111;
-localparam ST_TRNG_GEN = 7'b00001000;
-localparam ST_TRNG_CLEAR = 7'b0001001; //end of operations states
+localparam ST_TRNG_GEN = 7'b00000110;
+localparam ST_TRNG_CLEAR = 7'b0000111; //end of operations states
+localparam ST_PUF_CLEAR = 7'b0001000;
+localparam ST_PUF_GEN = 7'b00001001;
+localparam ST_PUF_ENC0 = 7'b00001010;
+localparam ST_PUF_ENC1 = 7'b00001011;
+localparam ST_PUF_ENC2 = 7'b00001100;
+localparam ST_PUF_ENC3 = 7'b00001101;
+localparam ST_PUF_ENC4 = 7'b00001110;
+localparam ST_PUF_ENC5 = 7'b00001111;
+localparam ST_PUF_ENC6 = 7'b00010000;
+localparam ST_PUF_ENC7 = 7'b00010001;
+localparam ST_AES_KEY1 = 7'b00010010;
+localparam ST_AES_PLAINTEXT = 7'b00010011;
+localparam ST_AES_CIPHERTEXT1 = 7'b00010100;
+localparam ST_PUF_SIGNATURE = 7'b00010101;
+localparam ST_PUF_ENC = 7'b00010110;
+localparam ST_TRNG = 7'b00010111;
+localparam ST_AES_KEY2 = 7'b00011000;
+localparam ST_AES_KEY3 = 7'b00011001;
+localparam ST_AES_KEY4 = 7'b00011010;
+localparam ST_AES_CIPHERTEXT2 = 7'b00011011;
+localparam ST_AES_CIPHERTEXT3 = 7'b00011100;
+localparam ST_AES_CIPHERTEXT4 = 7'b00011101;
 
 //obfuscation states
 localparam ST_OBFC00 = 7'b1000000; //MSB=1 is for Obfuscation and its going from zero to 31 so changing 5 LSB.
