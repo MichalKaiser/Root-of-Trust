@@ -429,10 +429,10 @@ always @(*) begin
 				next_state = ST_FSM;
 			end
 			else if (address == status_register_address) begin
-				
+				next_state = ST_STATUS;
 			end
 			else if (address == operation_register_address) begin
-				
+				next_state = ST_OPERATIONS;
 			end
 		end
 		ST_STATUS_CLEAR: begin

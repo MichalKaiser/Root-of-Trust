@@ -34,6 +34,9 @@ localparam ST_AES_KEY4 = 7'b00011010;
 localparam ST_AES_CIPHERTEXT2 = 7'b00011011;
 localparam ST_AES_CIPHERTEXT3 = 7'b00011100;
 localparam ST_AES_CIPHERTEXT4 = 7'b00011101;
+localparam ST_FSM  = 7'b00011110;
+localparam ST_STATUS = 7'b00011111;
+localparam ST_OPERATIONS = 7'b00100000;
 
 //obfuscation states
 localparam ST_OBFC00 = 7'b1000000; //MSB=1 is for Obfuscation and its going from zero to 31 so changing 5 LSB.
