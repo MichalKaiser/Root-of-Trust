@@ -11,98 +11,37 @@ module rot #(
 );
 
 `include "opcodes.vh"
+`include "fsm_state.vh"
+`include "register_addresses.vh"
+`include "registers_memory.vh"
+
+/*
+FLAGS
+*******************************************************************************************************************************************
+*/
+
+reg OBFC_correct; // 1 if Obfuscation is correct.
+reg [7:0] state, next_state; //states of FSM
+
 /*
 AES
-*********************************************************************
+*******************************************************************************************************************************************
 */
+
 localparam ld = 1'b1;
 reg done;
 
 /*
-SPECIAL REGISTERS - for status and operations
-*********************************************************************
+*******************************************************************************************************************************************
 */
-reg[WIDTH-1:0] status_register_mem;
-reg[WIDTH-1:0]  operation_register_mem;
-
-/*
-REGISTERS memory - for onother operations
-*/
-
-reg[4*WIDTH-1:0] AES_key;
-reg[4*WIDTH-1:0] AES_plaintext;
-reg[4*WIDTH-1:0] AES_ciphertext;
-reg[32*WIDTH-1:0] PUF_signature;
-reg[32*WIDTH-1:0] enc_PUF_signature;
-reg[4WIDTH-1:0] TRNG;
-reg[WIDTH-1:0] FSM;
-
-/*
-FLAGS
-*********************************************************************
-*/
-
-reg FSM_correct; // 1 or 0
-
-
-/*
-FSM STATES
-*********************************************************************
-*/
-localparam ST_START = 7'b100000;
-localparam ST_IDLE = 7'b100001;
-localparam ST_FSM0 = 7'b0;
-localparam ST_FSM1 = 7'b1;
-localparam ST_FSM2 = 7'b10;
-localparam ST_FSM3 = 7'b11;
-localparam ST_FSM4 = 7'b100;
-localparam ST_FSM5 = 7'b101;
-localparam ST_FSM6 = 7'b110;
-localparam ST_FSM7 = 7'b111;
-localparam ST_FSM8 = 7'b1000;
-localparam ST_FSM9 = 7'b1001;
-localparam ST_FSM10 = 7'b1010;
-localparam ST_FSM11 = 7'b1011;
-localparam ST_FSM12 = 7'b1100;
-localparam ST_FSM13 = 7'b1101;
-localparam ST_FSM14 = 7'b1110;
-localparam ST_FSM15 = 7'b1111;
-localparam ST_FSM16 = 7'b10000;
-localparam ST_FSM17 = 7'b10001;
-localparam ST_FSM18 = 7'b10010;
-localparam ST_FSM19 = 7'b10011;
-localparam ST_FSM20 = 7'b10100;
-localparam ST_FSM21 = 7'b10101;
-localparam ST_FSM22 = 7'b10110;
-localparam ST_FSM23 = 7'b10111;
-localparam ST_FSM24 = 7'b11000;
-localparam ST_FSM25 = 7'b11001;
-localparam ST_FSM26 = 7'b11010;
-localparam ST_FSM27 = 7'b11011;
-localparam ST_FSM28 = 7'b11100;
-localparam ST_FSM29 = 7'b11101;
-localparam ST_FSM30 = 7'b11110;
-localparam ST_FSM31 = 7'b11111;
-localparam ST_FSM = 7'b100010;
-localparam ST_STATUS_CLEAR = 7'b100011;
-localparam ST_AES_RUN = 7'b100100;
-localparam ST_AES_CLEAR = 7'b100101;
-localparam ST_PUF_GEN = 7'b100110;
-localparam ST_PUF_CLEAR = 7'b100111;
-localparam ST_TRNG_GEN = 7'b101000;
-localparam ST_TRNG_CLEAR = 7'b101001;
-
-reg [7:0] state, next_state;
 
 always @(posedge clk or negedge rst_n) begin
 	if (rst_n == 1'b0) begin
-		state <= ST_START;
-		operation_register_mem <= OP_NOP; //default
-		status_register_mem <= 32'b0; //default
-		FSM_correct = 0; //default
-		FSM <= 32'b11110000111100001010101010101010; //default
-		re <= 0;
-		we <= 0;
+		state <= ST_START; //first state
+		operation_register <= OP_NOP; //b default RoT should do nothing => OP_NOP;
+		status_register <= 32'b00000000000000000000000000000000; //default everything is clear
+		OBFC_correct = 0; // by default it shouldnt be set us correct
+		FSM <= 32'b11110000111100001010101010101010; // setting default value of Obfuscation bits sequence
 	end
 	else begin
 		state <= next_state;
@@ -112,492 +51,364 @@ end
 always @(*) begin
 	case (state)
 		ST_START: begin
-			status_register_mem <= 32'b0;
-			if(address == 32'h1000_0081 && data_i==OP_FSM && status_register_mem[0] != 1) begin
-				next_state = ST_FSM0;
-			end
-			if else(address == 32'h1000_0081 && data_i!=OP_FSM) begin
-				next_state = ST_START;
-			end
-			if else(address != 32'h1000_0081) begin
-				next_state = ST_START;
-			end
-		end
-		ST_FSM0: begin
-			if(address == 32'h1000_0081 && data_i[31]==FSM[31]) begin
-				FSM_correct = 1;
-				status_register_mem = 32'b11;
-				next_state = ST_FSM1;
-			end
-			else if(address == 32'h1000_0081 && data_i[31] != FSM[31])begin
-				FSM_correct = 0;
-				next_state = ST_FSM1;
-			end
-			else if(address != 32'h1000_0081) begin
-				next_state = ST_START; //?????????, should be like this? - it is not needed. Address can be basicly checked at the begining and at the end of the operation. also dont forget to make rot busy.
-			end
-		end
-		ST_FSM1: begin
-			if(address == 32'h1000_0081 && data_i[30]==FSM[30]) begin
-				status_register_mem = 32'b11;
-				next_state = ST_FSM2;
-			end
-			else if(address == 32'h1000_0081 && data_i[30] != FSM[30])begin
-				FSM_correct = 0;
-				next_state = ST_FSM2;
-			end
-			else if(address != 32'h1000_0081) begin
-				next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM2: begin
-			if(address == 32'h1000_0081 && data_i[29]==FSM[29]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM3;
-			end
-			else if(address == 32'h1000_0081 && data_i[29]!=FSM[29]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM3;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM3: begin
-			if(address == 32'h1000_0081 && data_i[28]==FSM[28]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM4;
-			end
-			else if(address == 32'h1000_0081 && data_i[28]!=FSM[28]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM4;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM4: begin
-			if(address == 32'h1000_0081 && data_i[27]==FSM[27]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM5;
-			end
-			else if(address == 32'h1000_0081 && data_i[27]!=FSM[27]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM5;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM5: begin
-			if(address == 32'h1000_0081 && data_i[26]==FSM[26]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM6;
-			end
-			else if(address == 32'h1000_0081 && data_i[26]!=FSM[26]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM6;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM6: begin
-			if(address == 32'h1000_0081 && data_i[25]==FSM[25]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM7;
-			end
-			else if(address == 32'h1000_0081 && data_i[25]!=FSM[25]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM7;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM7: begin
-			if(address == 32'h1000_0081 && data_i[24]==FSM[24]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM8;
-			end
-			else if(address == 32'h1000_0081 && data_i[24]!=FSM[24]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM8;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM8: begin
-			if(address == 32'h1000_0081 && data_i[23]==FSM[23]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM9;
-			end
-			else if(address == 32'h1000_0081 && data_i[23]!=FSM[23]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM9;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM9: begin
-			if(address == 32'h1000_0081 && data_i[22]==FSM[22]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM10;
-			end
-			else if(address == 32'h1000_0081 && data_i[22]!=FSM[22]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM10;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM10: begin
-			if(address == 32'h1000_0081 && data_i[21]==FSM[21]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM11;
-			end
-			else if(address == 32'h1000_0081 && data_i[21]!=FSM[21]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM11;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM11: begin
-			if(address == 32'h1000_0081 && data_i[20]==FSM[20]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM12;
-			end
-			else if(address == 32'h1000_0081 && data_i[20]!=FSM[20]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM12;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM12: begin
-			if(address == 32'h1000_0081 && data_i[19]==FSM[19]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM13;
-			end
-			else if(address == 32'h1000_0081 && data_i[19]!=FSM[19]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM13;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM13: begin
-			if(address == 32'h1000_0081 && data_i[18]==FSM[18]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM14;
-			end
-			else if(address == 32'h1000_0081 && data_i[18]!=FSM[18]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM14;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM14: begin
-			if(address == 32'h1000_0081 && data_i[17]==FSM[17]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM15;
-			end
-			else if(address == 32'h1000_0081 && data_i[17]!=FSM[17]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM15;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM15: begin
-			if(address == 32'h1000_0081 && data_i[16]==FSM[16]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM16;
-			end
-			else if(address == 32'h1000_0081 && data_i[16]!=FSM[16]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM16;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM16: begin
-			if(address == 32'h1000_0081 && data_i[15]==FSM[15]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM17;
-			end
-			else if(address == 32'h1000_0081 && data_i[15]!=FSM[15]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM17;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM17: begin
-			if(address == 32'h1000_0081 && data_i[14]==FSM[14]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM18;
-			end
-			else if(address == 32'h1000_0081 && data_i[14]!=FSM[14]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM18;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM18: begin
-			if(address == 32'h1000_0081 && data_i[13]==FSM[13]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM19;
-			end
-			else if(address == 32'h1000_0081 && data_i[13]!=FSM[13]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM19;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM19: begin
-			if(address == 32'h1000_0081 && data_i[12]==FSM[12]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM20;
-			end
-			else if(address == 32'h1000_0081 && data_i[12]!=FSM[12]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM20;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM20: begin
-			if(address == 32'h1000_0081 && data_i[11]==FSM[11]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM21;
-			end
-			else if(address == 32'h1000_0081 && data_i[11]!=FSM[11]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM21;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM21: begin
-			if(address == 32'h1000_0081 && data_i[10]==FSM[10]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM22;
-			end
-			else if(address == 32'h1000_0081 && data_i[10]!=FSM[10]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM22;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM22: begin
-			if(address == 32'h1000_0081 && data_i[9]==FSM[9]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM23;
-			end
-			else if(address == 32'h1000_0081 && data_i[9]!=FSM[9]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM23;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM23: begin
-			if(address == 32'h1000_0081 && data_i[8]==FSM[8]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM24;
-			end
-			else if(address == 32'h1000_0081 && data_i[8]!=FSM[8]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM24;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM24: begin
-			if(address == 32'h1000_0081 && data_i[7]==FSM[7]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM25;
-			end
-			else if(address == 32'h1000_0081 && data_i[7]!=FSM[7]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM25;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM25: begin
-			if(address == 32'h1000_0081 && data_i[6]==FSM[6]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM26;
-			end
-			else if(address == 32'h1000_0081 && data_i[6]!=FSM[6]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM26;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM26: begin
-			if(address == 32'h1000_0081 && data_i[5]==FSM[5]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM27;
-			end
-			else if(address == 32'h1000_0081 && data_i[5]!=FSM[5]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM27;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM27: begin
-			if(address == 32'h1000_0081 && data_i[4]==FSM[4]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM28;
-			end
-			else if(address == 32'h1000_0081 && data_i[4]!=FSM[4]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM28;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM28: begin
-			if(address == 32'h1000_0081 && data_i[3]==FSM[3]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM29;
-			end
-			else if(address == 32'h1000_0081 && data_i[3]!=FSM[3]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM29;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM29: begin
-			if(address == 32'h1000_0081 && data_i[2]==FSM[2]) begin
-					status_register_mem = 32'b11;
-					next_state = ST_FSM30;
-			end
-			else if(address == 32'h1000_0081 && data_i[2]!=FSM[2]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM30;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM30: begin
-			if(address == 32'h1000_0081 && data_i[1]==FSM[1]) begin
-					status_register_mem = 32'b11;
-					next_state <= ST_FSM31;
-			end
-			else if(address == 32'h1000_0081 && data_i[1]!=FSM[1]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_FSM31;
-			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
-			end
-		end
-		ST_FSM31: begin
-			if(address == 32'h1000_0081 && data_i[0]==FSM[0]) begin
-				if (FSM_correct == 0) begin
-					status_register_mem = 32'b0000;
-					next_state = ST_START;
+			if(address == operation_register_address) begin
+				if(data_i == OP_FSM) begin
+					next_state = ST_FSM0;
 				end
 				else begin
-					status_register_mem = 32'b0000;
-					next_state = ST_IDLE;
+					next_state = ST_START;
 				end
 			end
-			else if(address == 32'h1000_0081 && data_i[0]!=FSM[0]) begin
-					FSM_correct = 0;
-					status_register_mem = 32'b11;
-					next_state = ST_START;
+			else begin
+				next_state = ST_START;
 			end
-			else if(address != 32'h1000_0081) begin
-					next_state = ST_START; //?????????, should be like this?
+		end
+		ST_OBFC00: begin
+			status_register[31] = 1'b1; //root is busy
+			status_register[30] = 1'b1; //FSM is busy
+			if(data_i[31] == FSM[31]) begin
+				OBFC_correct = 1; //frist one correct then it shouldnt be changed
+				next_state = ST_OBFC01;
+			end
+			else begin
+				OBFC_correct = 0; // 
+				next_state = ST_OBFC01;
+			end
+		end
+		ST_OBFC01: begin
+			if(data_i[30]==FSM[30]) begin
+				next_state = ST_OBFC02;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC02;
+			end
+		end
+		ST_OBFC02: begin
+			if(data_i[29]==FSM[29]) begin
+				next_state = ST_OBFC03;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC03;
+			end
+		end
+		ST_OBFC03: begin
+			if(data_i[28]==FSM[28]) begin
+				next_state = ST_OBFC04;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC04;
+			end
+		end
+		ST_OBFC04: begin
+			if(data_i[27]==FSM[27]) begin
+				next_state = ST_OBFC05;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC05;
+			end
+		end
+		ST_OBFC05: begin
+			if(data_i[26]==FSM[26]) begin
+				next_state = ST_OBFC06;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC06;
+			end
+		end
+		ST_OBFC06: begin
+			if(data_i[25]==FSM[25]) begin
+				next_state = ST_OBFC07;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC07;
+			end
+		end
+		ST_OBFC07: begin
+			if(data_i[24]==FSM[24]) begin
+				next_state = ST_OBFC08;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC08;
+			end
+		end
+		ST_OBFC08: begin
+			if(data_i[23]==FSM[23]) begin
+				next_state = ST_OBFC09;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC09;
+			end
+		end
+		ST_OBFC09: begin
+			if(data_i[22]==FSM[22]) begin
+				next_state = ST_OBFC10;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC10;
+			end
+		end
+		ST_OBFC10: begin
+			if(data_i[21]==FSM[21]) begin
+				next_state = ST_OBFC11;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC11;
+			end
+		end
+		ST_OBFC11: begin
+			if(data_i[20]==FSM[20]) begin
+				next_state = ST_OBFC12;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC12;
+			end
+		end
+		ST_OBFC12: begin
+			if(data_i[19]==FSM[19]) begin
+				next_state = ST_OBFC13;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC13;
+			end
+		end
+		ST_OBFC13: begin
+			if(data_i[18]==FSM[18]) begin
+				next_state = ST_OBFC14;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC14;
+			end
+		end
+		ST_OBFC14: begin
+			if(data_i[17]==FSM[17]) begin
+				next_state = ST_OBFC15;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC15;
+			end
+		end
+		ST_OBFC15: begin
+			if(data_i[16]==FSM[16]) begin
+				next_state = ST_OBFC16;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC16;
+			end
+		end
+		ST_OBFC16: begin
+		if(data_i[15]==FSM[15]) begin
+			next_state = ST_OBFC17;
+		end
+		else begin
+			OBFC_correct = 0;
+			next_state = ST_OBFC17;
+		end
+		end
+		ST_OBFC17: begin
+			if(data_i[14]==FSM[14]) begin
+				next_state = ST_OBFC18;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC18;
+			end
+		end
+		ST_OBFC18: begin
+			if(data_i[13]==FSM[13]) begin
+				next_state = ST_OBFC19;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC19;
+			end
+		end
+		ST_OBFC19: begin
+			if(data_i[12]==FSM[12]) begin
+				next_state = ST_OBFC20;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC20;
+			end
+		end
+		ST_OBFC20: begin
+			if(data_i[11]==FSM[11]) begin
+				next_state = ST_OBFC21;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC21;
+			end
+		end
+		ST_OBFC21: begin
+			if(data_i[10]==FSM[10]) begin
+				next_state = ST_OBFC22;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC22;
+			end
+		end
+		ST_OBFC22: begin
+			if(data_i[9]==FSM[9]) begin
+				next_state = ST_OBFC23;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC23;
+			end
+		end
+		ST_OBFC23: begin
+			if(data_i[8]==FSM[8]) begin
+				next_state = ST_OBFC24;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC24;
+			end
+		end
+		ST_OBFC24: begin
+			if(data_i[7]==FSM[7]) begin
+				next_state = ST_OBFC25;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC25;
+			end
+		end
+		ST_OBFC25: begin
+			if(data_i[6]==FSM[6]) begin
+				next_state = ST_OBFC26;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC26;
+			end
+		end
+		ST_OBFC26: begin
+			if(data_i[5]==FSM[5]) begin
+				next_state = ST_OBFC27;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC27;
+			end
+		end
+		ST_OBFC27: begin
+			if(data_i[4]==FSM[4]) begin
+				next_state = ST_OBFC28;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC28;
+			end
+		end
+		ST_OBFC28: begin
+			if(data_i[3]==FSM[3]) begin
+				next_state = ST_OBFC29;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC29;
+			end
+		end
+		ST_OBFC29: begin
+			if(data_i[2]==FSM[2]) begin
+				next_state = ST_OBFC30;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC30;
+			end
+		end
+		ST_OBFC30: begin
+			if(data_i[1]==FSM[1]) begin
+				next_state = ST_OBFC31;
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_OBFC31;
+			end
+		end
+		ST_OBFC31: begin
+			if(data_i[0]==FSM[0]) begin
+				if (OBFC_correct == 1) begin
+					status_register[31] = 1'b0;
+					status_register[30] = 1'b0;
+					next_state = ST_IDLE;
+				end
+				else begin
+					next_state = ST_START;
+				end
+			end
+			else begin
+				OBFC_correct = 0;
+				next_state = ST_START;
 			end
 		end
 		ST_IDLE: begin
 			status_register_mem[4:0] = 5'b0000;
-			if (address == 32'h1000_0081 && data_i == OP_STATUS_CLEAR) begin
-				next_state = ST_STATUS_CLEAR;
+			if (address == operation_register_address) begin
+				if (data_i == OP_NOP) begin
+					next_state = ST_IDLE;
+				end
+				else if (data_i == OP_FSM) begin
+					next_state = ST_OBFC00;
+				end	
+				else if (data_i == OP_STATUS_CLEAR) begin
+					next_state = ST_STATUS_CLEAR;
+				end				
+				else if (data_i == OP_AES_RUN) begin
+					next_state = ST_AES_RUN;
+				end
+				else if (data_i == OP_AES_CLEAR) begin
+					next_state = ST_AES_CLEAR;
+				end
+				else if (data_i == OP_PUF_GEN) begin
+					next_state = ST_PUF_GEN;
+				end
+				else if (data_i == OP_PUF_CLEAR) begin
+					next_state = ST_PUF_CLEAR;
+				end
+				else if (data_i == OP_TRNG_GEN) begin
+					next_state = ST_TRNG_GEN;
+				end
+				if (data_i == OP_TRNG_CLEAR) begin
+					next_state = ST_TRNG_CLEAR
+				end
 			end
-			else if (address == 32'h1000_0081  && data_i == OP_AES_RUN) begin
-				next_state = ST_AES_RUN;
+			else if (address == AES_key_address1) begin
+				
 			end
-			else if (address == 32'h1000_0081  && data_i == OP_AES_CLEAR) begin
-				next_state = ST_AES_CLEAR;
+			else if (address == AES_plaintext_address1) begin
+
 			end
-			else if (address == 32'h1000_0081  && data_i == OP_PUF_GEN) begin
-				next_state = ;
+			else if (address = AES_ciphertext_address1) begin
+			
 			end
-			else if (address == 32'h1000_0081 && data_i == OP_PUF_CLEAR) begin
-				next_state = ;
+			else if (address = PUF_signature_address1) begin
+			
 			end
-			else if (address == 32'h1000_0081 && data_i == OP_TRNG_GEN ) begin
-				next_state = ;
+			else if (address = enc_PUF_signature_address1) begin
+			
 			end
-			else if (address == 32'h1000_0081 && data_i == OP_TRNG_CLEAR) begin
-				next_state = ;
+			else if (address = TRNG_address1) begin
+			
 			end
 		end
 		ST_STATUS_CLEAR: begin
