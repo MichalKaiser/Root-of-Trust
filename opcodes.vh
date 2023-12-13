@@ -1,4 +1,4 @@
-localparam OP_NOP = 32'h0000; //idle
+localparam OP_NOP = 32'h0000; //in indle if there is nothing to do
 localparam OP_FSM = 32'h0111;
 localparam OP_STATUS_CLEAR = 32'h0222;
 localparam OP_AES_RUN = 32'h000B;
