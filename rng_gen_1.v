@@ -8,10 +8,10 @@ module rng_gen_1(enable, clk, output_signal);
     reg flip_flop; //reg is basicly flip-flop
 
     // Instantiate the oscillators
-    osc_ring_3 osc3(.enable(enable), .output_signal(osc3_out));
-    osc_ring_5 osc5(.enable(enable), .output_signal(osc5_out));
-    osc_ring_7 osc7(.enable(enable), .output_signal(osc7_out));
-    osc_ring_9 osc9(.enable(enable), .output_signal(osc9_out));
+    osc_ring_3 osc3(.clk(clk), .enable(enable), .output_signal(osc3_out));
+    osc_ring_5 osc5(.clk(clk), .enable(enable), .output_signal(osc5_out));
+    osc_ring_7 osc7(.clk(clk), .enable(enable), .output_signal(osc7_out));
+    osc_ring_9 osc9(.clk(clk), .enable(enable), .output_signal(osc9_out));
 
     // XOR the outputs of the oscillators
     assign xor_out = osc3_out ^ osc5_out ^ osc7_out ^ osc9_out;

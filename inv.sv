@@ -9,6 +9,7 @@ reg [31:0] temp;
 integer delay;
 
 initial begin
+
 	temp = $urandom; // this gives you a random unsigned number
 	if (temp[31]) flip = 1;
 	temp = temp %1000; // this contrains the random number between 0 and +999

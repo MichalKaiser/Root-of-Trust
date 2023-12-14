@@ -54,6 +54,7 @@ module rot #(
 	reg enable_puf;
 
 	puf_gen_1024 puf_gen(
+		.clk(clk),
 		.enable(enable_puf),
 		.control_input(control_input),
 		.output_signal(output_signal_puf)
@@ -453,10 +454,10 @@ module rot #(
 					next_state = ST_PUF_SIGNATURE;
 				end
 				else if (address == enc_PUF_signature_address1) begin
-					next_state = ST_PUF_ENC;
+					next_state = ST_PUF_ENC0;
 				end
 				else if (address == TRNG_address1) begin
-					next_state = ST_TRNG;
+					next_state = ST_TRNG1;
 				end
 				else if (address == FSM_address) begin
 					next_state = ST_FSM;
@@ -477,66 +478,63 @@ module rot #(
 				if (status_register[5] == 1) begin
 				if(status_register[0] == 1 && status_register[3] == 1) begin
 					status_register[4] = 1'b1; //run AES
-					if (prev_state == ST_PUF_ENC0) begin
+					if (prev_state == ST_PUF_ENCRPT0) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[127:0];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[127:0] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC1;
+						next_state = ST_PUF_ENCRPT1;
 					end
-					else if (prev_state == ST_PUF_ENC1) begin
-						if (prev_state == ST_PUF_ENC0) begin
+					else if (prev_state == ST_PUF_ENCRPT1) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[255:128];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[255:128] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC1;
+						next_state = ST_PUF_ENCRPT2;
 					end
-						next_state = ST_PUF_ENC2;
-					end
-					else if (prev_state == ST_PUF_ENC2) begin
+					else if (prev_state == ST_PUF_ENCRPT2) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[383:256];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[383:256] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC3;
+						next_state = ST_PUF_ENCRPT3;
 					end
-					else if (prev_state == ST_PUF_ENC3) begin
+					else if (prev_state == ST_PUF_ENCRPT3) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[511:384];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[511:384] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC4;
+						next_state = ST_PUF_ENCRPT4;
 					end
-					else if (prev_state == ST_PUF_ENC4) begin
+					else if (prev_state == ST_PUF_ENCRPT4) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[639:512];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[639:512] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC5;
+						next_state = ST_PUF_ENCRPT5;
 					end
-					else if (prev_state == ST_PUF_ENC5) begin
+					else if (prev_state == ST_PUF_ENCRPT5) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[767:640];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[767:640] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC6;
+						next_state = ST_PUF_ENCRPT6;
 					end
-					else if (prev_state == ST_PUF_ENC6) begin
+					else if (prev_state == ST_PUF_ENCRPT6) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[895:768];
 						AES_ciphertext = AES_output;
 						enc_PUF_signature[895:768] = AES_output;
 						ld_aes=0;
-						next_state = ST_PUF_ENC7;
+						next_state = ST_PUF_ENCRPT7;
 					end
-					else if (prev_state == ST_PUF_ENC7) begin
+					else if (prev_state == ST_PUF_ENCRPT7) begin
 						ld_aes = 1;
 						AES_plaintext = PUF_signature[1023:896];
 						AES_ciphertext = AES_output;
@@ -561,7 +559,7 @@ module rot #(
 				end
 			end
 			ST_PUF_GEN: begin
-				if(prev_state == ST_PUF_ENC7) begin
+				if(prev_state == ST_PUF_ENCRPT7) begin
 					status_register[30] = 1'b1;
 					next_state = ST_IDLE;
 				end
@@ -573,7 +571,7 @@ module rot #(
 						enable_puf = 1;
 						control_input = 2'b01;
 						PUF_signature = output_signal_puf;
-						next_state = ST_PUF_ENC0;
+						next_state = ST_PUF_ENCRPT0;
 						enable_puf = 0;
 					end
 					else begin
@@ -581,36 +579,36 @@ module rot #(
 					end
 				end
 			end
-			ST_PUF_ENC0: begin
-				prev_state = ST_PUF_ENC0;
+			ST_PUF_ENCRPT0: begin
+				prev_state = ST_PUF_ENCRPT0;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC1: begin
-				prev_state = ST_PUF_ENC1;
+			ST_PUF_ENCRPT1: begin
+				prev_state = ST_PUF_ENCRPT1;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC2: begin
-				prev_state = ST_PUF_ENC2;
+			ST_PUF_ENCRPT2: begin
+				prev_state = ST_PUF_ENCRPT2;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC3: begin
-				prev_state = ST_PUF_ENC3;
+			ST_PUF_ENCRPT3: begin
+				prev_state = ST_PUF_ENCRPT3;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC4: begin
-				prev_state = ST_PUF_ENC4;
+			ST_PUF_ENCRPT4: begin
+				prev_state = ST_PUF_ENCRPT4;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC5: begin
-				prev_state = ST_PUF_ENC5;
+			ST_PUF_ENCRPT5: begin
+				prev_state = ST_PUF_ENCRPT5;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC6: begin
-				prev_state = ST_PUF_ENC6;
+			ST_PUF_ENCRPT6: begin
+				prev_state = ST_PUF_ENCRPT6;
 				next_state = ST_AES_RUN;
 			end
-			ST_PUF_ENC7: begin
-				prev_state = ST_PUF_ENC7;
+			ST_PUF_ENCRPT7: begin
+				prev_state = ST_PUF_ENCRPT7;
 				next_state = ST_AES_RUN;
 			end
 			ST_PUF_CLEAR: begin
@@ -802,23 +800,23 @@ module rot #(
 				end
 			end
 			ST_PUF_ENC1: begin
-			if (status_register[30] == 1) begin
-			if (address == enc_PUF_signature_address2) begin
-			if (re == 1) begin
-				assign data_o = enc_PUF_signature[63:32];
-				next_state = ST_PUF_ENC2;
-			end
-			else if (we == 1) begin
-				next_state = ST_IDLE;
-			end
-			else begin
-				next_state = ST_IDLE;
-			end
-			end
-			end
-			else begin
-			next_state = ST_IDLE;
-			end
+				if (status_register[30] == 1) begin
+					if (address == enc_PUF_signature_address2) begin
+						if (re == 1) begin
+							assign data_o = enc_PUF_signature[63:32];
+							next_state = ST_PUF_ENC2;
+						end
+						else if (we == 1) begin
+							next_state = ST_IDLE;
+						end
+						else begin
+						next_state = ST_IDLE;
+						end
+					end
+					else begin
+						next_state = ST_IDLE;
+					end
+				end
 			end
 
 			ST_PUF_ENC2: begin
@@ -1406,7 +1404,7 @@ module rot #(
 			if (address == enc_PUF_signature_address32) begin
 			if (re == 1) begin
 				assign data_o = enc_PUF_signature[1023:992];
-				next_state = ST_PUF_ENC32;
+				next_state = ST_IDLE;
 			end
 			else if (we == 1) begin
 				next_state = ST_IDLE;
@@ -1498,7 +1496,7 @@ module rot #(
 			end
 			ST_FSM: begin
 				if (address == FSM_address) begin
-					else if (we == 1) begin
+					if (we == 1) begin
 						FSM = data_i;
 					end
 					next_state = ST_IDLE;
@@ -1508,25 +1506,23 @@ module rot #(
 				if (address == status_register_address) begin
 					if (re == 1) begin
 						assign data_o = status_register;
+					end
+					next_state = ST_IDLE;
+				end
+			end
+			ST_OPERATIONS: begin
+				if (address == operation_register_address) begin
+					if (re == 1) begin
+						assign data_o = operation_register;
+						next_state = ST_IDLE;
+					end
+					else if (we == 1) begin
+						operation_register = data_i;
 						next_state = ST_IDLE;
 					end
 					else begin
 						next_state = ST_IDLE;
 					end
-				end
-				else begin
-						next_state = ST_IDLE;
-				end
-			end
-			ST_OPERATIONS: begin
-				if (address == operations_register_address) begin
-					if (re == 1) begin
-						assign data_o = operations_register;
-					end
-					else if (we == 1) begin
-						operations_register = data_i;
-					end
-					next_state = ST_IDLE;
 				end
 			end
 		endcase
