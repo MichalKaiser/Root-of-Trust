@@ -401,7 +401,7 @@ always @(*) begin
 					next_state = ST_TRNG_GEN;
 				end
 				else if (data_i == OP_TRNG_CLEAR) begin
-					next_state = ST_TRNG_CLEAR
+					next_state = ST_TRNG_CLEAR;
 				end
 				else begin
 					next_state = ST_IDLE;
@@ -444,101 +444,101 @@ always @(*) begin
 			if(status_register[0] == 1 && status_register[3] == 1) begin
 				status_register[4] = 1'b1; //run AES
 				if (prev_state == ST_PUF_ENC0) begin
-					ld = 1;
+					ld <= 1;
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
-						.text_in(PUF_signature[127:0]),
-						.text_out(enc_PUF_signature[127:0])
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
+						PUF_signature[127:0],
+						enc_PUF_signature[127:0]
 					);
-					next_state ST_PUF_ENC1;
+					next_state = ST_PUF_ENC1;
 				end
 				else if (prev_state == ST_PUF_ENC1) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
-						.text_in(PUF_signature[255:128]),
-						.text_out(enc_PUF_signature[255:128])
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
+						PUF_signature[255:128],
+						enc_PUF_signature[255:128]
 					);
-					next_state ST_PUF_ENC2;
+					next_state = ST_PUF_ENC2;
 				end
 				else if (prev_state == ST_PUF_ENC2) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
-						.text_in(PUF_signature[383:256]),
-						.text_out(enc_PUF_signature[383:256])
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
+						PUF_signature[383:256],
+						enc_PUF_signature[383:256]
 					);
-					next_state ST_PUF_ENC3;
+					next_state = ST_PUF_ENC3;
 				end
 				else if (prev_state == ST_PUF_ENC3) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
 						.text_in(PUF_signature[511:384]),
 						.text_out(enc_PUF_signature[511:384])
 					);
-					next_state ST_PUF_ENC4;
+					next_state = ST_PUF_ENC4;
 				end
 				else if (prev_state == ST_PUF_ENC4) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
 						.text_in(PUF_signature[639:512]),
 						.text_out(enc_PUF_signature[639:512])
 					);
-					next_state ST_PUF_ENC5;
+					next_state = ST_PUF_ENC5;
 				end
 				else if (prev_state == ST_PUF_ENC5) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
 						.text_in(PUF_signature[767:640]),
 						.text_out(enc_PUF_signature[767:640])
 					);
-					next_state ST_PUF_ENC6;
+					next_state = ST_PUF_ENC6;
 				end
 				else if (prev_state == ST_PUF_ENC6) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
 						.text_in(PUF_signature[895:768]),
 						.text_out(enc_PUF_signature[895:768])
 					);
-					next_state ST_PUF_ENC6;					
+					next_state = ST_PUF_ENC6;					
 				end
 				else if (prev_state == ST_PUF_ENC7) begin
 					aes_cipher_top aes_cipher_top(
-						.clk (clk),
-						.rst_n(rst_n),
-						.ld(ld),
-						.done(done),
-						.key(AES_key),
+						clk,
+						rst_n,
+						ld,
+						done,
+						AES_key,
 						.text_in(PUF_signature[1023:896]),
 						.text_out(enc_PUF_signature[1023:896])
 					);
-					next_state ST_PUF_GEN;	
+					next_state = ST_PUF_GEN;	
 				end
 
 			end
@@ -547,11 +547,12 @@ always @(*) begin
 				status_register[4] = 1'b1; //run AES
 				status_register[0] = 1'b1; //run ROOT
 				ld = 1;
-				aes_cipher_top aes_cipher_top(.clk (clk),
-				.rst_n(rst_n),
-				.ld(ld),
-				.done(done),
-				.key(AES_key),
+				aes_cipher_top aes_cipher_top(
+					clk,
+					rst_n,
+					ld,
+					done,
+					AES_key,
 				.text_in(AES_plaintext),
 				.text_out(AES_output)
 				);
@@ -581,12 +582,12 @@ always @(*) begin
 				status_register[0] = 1'b1;
 				status_register[3] = 1'b1;
 				if(status_register[30] == 0) begin //if PUF is not dirty
-					enable = 1;
-					control_input = 2'b01;
+					enable <= 1;
+					control_input <= 2'b01;
 					puf_gen_1024 puf_gen(
-						.enable(enable),
-						.control_input(control_input),
-						.output_signal(output_signal)
+						enable,
+						control_input,
+						output_signal
 					);
 					PUF_signature = output_signal;
 					next_state = ST_PUF_ENC0;
@@ -639,9 +640,9 @@ always @(*) begin
 			status_register[2] = 1;
 			if(status_register[28:26] < 6) begin
 				rng_gen_128 random_number_gen(
-					.enable(enable),
-					.clk(clk), 
-					.output_signal(output_signal)
+					enable,
+					clk, 
+					output_signal
 				);
 				TRNG = output_signal;
 				status_register[28:26] = status_register[28:26] + 1;
@@ -671,7 +672,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;
 			end
 		end
 		ST_AES_KEY2: begin
@@ -691,7 +692,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;ß
 			end
 		end
 		ST_AES_KEY3: begin
@@ -711,7 +712,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;
 			end
 		end
 		ST_AES_KEY4: begin
@@ -731,7 +732,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;
 			end
 		end
 		ST_AES_PLAINTEXT: begin
@@ -749,7 +750,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;
 			end
 		end
 		ST_AES_CIPHERTEXT2: begin
@@ -764,7 +765,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;
 			end
 		end
 		ST_AES_CIPHERTEXT3: begin
@@ -779,7 +780,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;
 			end
 		end
 		ST_AES_CIPHERTEXT4: begin
@@ -794,7 +795,7 @@ always @(*) begin
 				end
 			end
 			else begin
-				next_state = ST_IDLE
+				next_state = ST_IDLE;ß
 			end
 		end
 		ST_PUF_SIGNATURE: begin
