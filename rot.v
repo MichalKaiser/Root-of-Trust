@@ -783,18 +783,726 @@ module rot #(
 				next_state = ST_IDLE;
 			end
 			ST_PUF_ENC0: begin
-				if (address == enc_PUF_signature_address1) begin
-					if (re == 1) begin
-
-					end
-					if (we == 1) begin
-
+				if (status_register[30] == 1) begin
+					if (address == enc_PUF_signature_address1) begin
+						if (re == 1) begin
+							assign data_o = enc_PUF_signature[31:0];
+							next_state = ST_PUF_ENC1;
+						end
+						else if (we == 1) begin
+							next_state = ST_IDLE;
+						end
+						else begin
+							next_state = ST_IDLE;
+						end
 					end
 				end
+				else begin
+					next_state = ST_IDLE;
+				end
 			end
-			ST_TRNG: begin
+			ST_PUF_ENC1: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address2) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[63:32];
+				next_state = ST_PUF_ENC2;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC2: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address3) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[95:64];
+				next_state = ST_PUF_ENC3;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC3: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address4) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[127:96];
+				next_state = ST_PUF_ENC4;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC4: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address5) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[159:128];
+				next_state = ST_PUF_ENC5;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC5: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address6) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[191:160];
+				next_state = ST_PUF_ENC6;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC6: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address7) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[223:192];
+				next_state = ST_PUF_ENC7;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC7: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address8) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[255:224];
+				next_state = ST_PUF_ENC8;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC8: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address9) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[287:256];
+				next_state = ST_PUF_ENC9;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC9: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address10) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[319:288];
+				next_state = ST_PUF_ENC10;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC10: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address11) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[351:320];
+				next_state = ST_PUF_ENC11;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC11: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address12) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[383:352];
+				next_state = ST_PUF_ENC12;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC12: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address13) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[415:384];
+				next_state = ST_PUF_ENC13;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC13: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address14) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[447:416];
+				next_state = ST_PUF_ENC14;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC14: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address15) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[479:448];
+				next_state = ST_PUF_ENC15;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC15: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address16) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[511:480];
+				next_state = ST_PUF_ENC16;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC16: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address17) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[543:512];
+				next_state = ST_PUF_ENC17;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC17: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address18) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[575:544];
+				next_state = ST_PUF_ENC18;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC18: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address19) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[607:576];
+				next_state = ST_PUF_ENC19;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC19: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address20) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[639:608];
+				next_state = ST_PUF_ENC20;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC20: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address21) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[671:640];
+				next_state = ST_PUF_ENC21;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC21: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address22) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[703:672];
+				next_state = ST_PUF_ENC22;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC22: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address23) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[735:704];
+				next_state = ST_PUF_ENC23;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC23: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address24) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[767:736];
+				next_state = ST_PUF_ENC24;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC24: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address25) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[799:768];
+				next_state = ST_PUF_ENC25;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC25: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address26) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[831:800];
+				next_state = ST_PUF_ENC26;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC26: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address27) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[863:832];
+				next_state = ST_PUF_ENC27;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC27: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address28) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[895:864];
+				next_state = ST_PUF_ENC28;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC28: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address29) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[927:896];
+				next_state = ST_PUF_ENC29;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC29: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address30) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[959:928];
+				next_state = ST_PUF_ENC30;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC30: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address31) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[991:960];
+				next_state = ST_PUF_ENC31;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+
+			ST_PUF_ENC31: begin
+			if (status_register[30] == 1) begin
+			if (address == enc_PUF_signature_address32) begin
+			if (re == 1) begin
+				assign data_o = enc_PUF_signature[1023:992];
+				next_state = ST_PUF_ENC32;
+			end
+			else if (we == 1) begin
+				next_state = ST_IDLE;
+			end
+			else begin
+				next_state = ST_IDLE;
+			end
+			end
+			end
+			else begin
+			next_state = ST_IDLE;
+			end
+			end
+			ST_TRNG1: begin
+				if (status_register[29] == 1) begin
+					if (address == TRNG_address1) begin
+						if (re == 1) begin
+							assign data_o = TRNG[31:0];
+							next_state = ST_TRNG2;
+						end
+						else if (we == 1) begin
+							next_state = ST_IDLE;
+						end
+						else begin
+							next_state = ST_IDLE;
+						end
+					end
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			ST_TRNG2: begin
+				if (status_register[29] == 1) begin
+					if (address == TRNG_address2) begin
+						if (re == 1) begin
+							assign data_o = TRNG[63:32];
+							next_state = ST_TRNG3;
+						end
+						else if (we == 1) begin
+							next_state = ST_IDLE;
+						end
+						else begin
+							next_state = ST_IDLE;
+						end
+					end
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			ST_TRNG3: begin
+				if (status_register[29] == 1) begin
+					if (address == TRNG_address3) begin
+						if (re == 1) begin
+							assign data_o = TRNG[95:64];
+							next_state = ST_TRNG4;
+						end
+						else if (we == 1) begin
+							next_state = ST_IDLE;
+						end
+						else begin
+							next_state = ST_IDLE;
+						end
+					end
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
+			end
+			ST_TRNG4: begin
+				if (status_register[29] == 1) begin
+					if (address == TRNG_address4) begin
+						if (re == 1) begin
+							assign data_o = TRNG[127:96];
+							next_state = ST_IDLE;
+						end
+						else if (we == 1) begin
+							next_state = ST_IDLE;
+						end
+						else begin
+							next_state = ST_IDLE;
+						end
+					end
+				end
+				else begin
+					next_state = ST_IDLE;
+				end
 			end
 			ST_FSM: begin
+				if (address == FSM_address) begin
+					else if (we == 1) begin
+						FSM = data_i;
+					end
+					next_state = ST_IDLE;
+				end
 			end
 			ST_STATUS: begin
 				if (address == status_register_address) begin
@@ -811,7 +1519,15 @@ module rot #(
 				end
 			end
 			ST_OPERATIONS: begin
-				next_state = ST_IDLE;
+				if (address == operations_register_address) begin
+					if (re == 1) begin
+						assign data_o = operations_register;
+					end
+					else if (we == 1) begin
+						operations_register = data_i;
+					end
+					next_state = ST_IDLE;
+				end
 			end
 		endcase
 	end
