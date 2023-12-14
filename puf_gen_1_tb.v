@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1fs/1fs
 
 module puf_gen_1_tb;
 
@@ -21,29 +21,29 @@ module puf_gen_1_tb;
         enable = 0;
         control_input = 0;
 
-        // Wait 100 ns for global reset to finish
-        #100;
-        
-        // Add stimulus here
         enable = 1;
         control_input = 2'b00;
-        #100;
+        // Wait 100 ns for global reset to finish
+        #31000;
+
         $display("Time: %t, Enable: %b, Control Input: %b, Output Signal: %b", $time, enable, control_input, output_signal);
 
         control_input = 2'b01;
-        #100;
+        #30000;
         $display("Time: %t, Enable: %b, Control Input: %b, Output Signal: %b", $time, enable, control_input, output_signal);
 
         control_input = 2'b10;
-        #100;
+        #10000;
         $display("Time: %t, Enable: %b, Control Input: %b, Output Signal: %b", $time, enable, control_input, output_signal);
 
         control_input = 2'b11;
-        #100;
+        #10000;
         $display("Time: %t, Enable: %b, Control Input: %b, Output Signal: %b", $time, enable, control_input, output_signal);
 
         enable = 0;
-        #100;
+        #1000000;
+        #1000000;
+        #10000;
         $display("Time: %t, Enable: %b, Control Input: %b, Output Signal: %b", $time, enable, control_input, output_signal);
 
         $finish;
